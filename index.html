@@ -1,25 +1,14 @@
 <html>
+<head>
+  <!-- Include the platformer game engine. -->
+  <link rel="stylesheet" type="text/css" href="platformer.css">
+  <script src="platformer.js"></script>
+</head>
 <body>
 
-<style type="text/css">
-body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-}
-
-#screen {
-  position: relative;
-}
-#screen .tile,
-#screen .character {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-}
-</style>
-
+<!-- Define tiles that can be used on the map.   -->
+<!-- Each tile is a different JPEG or PNG image. -->
+<!-- Tiles have one-letter names.                -->
 <script>
 var tiles = {
   r: 'images/tiles/ground-red.jpg',
@@ -28,144 +17,15 @@ var tiles = {
 }
 </script>
 
-<script>
-var characterTemplates = {
-  P: {
-    standing: 'images/characters/player-standing.png',
-    walking: 'images/characters/player-walking.png',
-    dazed: 'images/characters/player-dazed.png',
-    isFacingRight: true
-  }
-}
-
-var characters = {
-}
-</script>
-
+<!-- Define the level (map). Each character represents one tile. -->
+<!-- Use the one-letter tile names defined above.                -->
+<!-- Exception is the player character: use P for this.          -->
 <script id="level" type="text/map">
-b b b b
-b b b b
-rP    r
-ggggggg
-g g g g
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-
-  var level = document.getElementById("level").innerHTML
-
-  var map = []
-  
-  var x = 0
-  var y = 0
-  for (var i = 0; i < level.length; i++, x++) {
-      var c = level.charAt(i);
-      
-      if (c == '\n' || c == '\r') {
-        x = 0
-        y++
-        continue
-      }
-      
-      var tileimagesrc = tiles[c]
-      if (tileimagesrc) {
-        if (!map[x]) map[x] = []
-        if (c != ' ') map[x][y] = c
-      
-        var image = document.createElement("img")
-        image.src = tileimagesrc
-        image.setAttribute('class', 'tile')
-        image.setAttribute('style', 'left: ' + x * 16 + 'px; top: ' + y * 16 + 'px')
-      
-        document.getElementById("platforms").appendChild(image)
-      }
-      
-      var characterTemplate = characterTemplates[c]
-      if (characterTemplate) {
-        var image = document.createElement("img")
-        image.src = characterTemplate.standing
-        image.setAttribute('class', 'character')
-        image.setAttribute('style', 'left: ' + x * 16 + 'px; top: ' + y * 16 + 'px')
-      
-        document.getElementById("characters").appendChild(image)
-        
-        characters[c] = characterTemplate
-        characters[c]['image'] = image
-        characters[c]['position'] = {
-          left: x,
-          top: y
-        }
-      }
-  }
-  
-  document.body.onkeydown = function(e) {
-    var keyCode = (window.event) ? event.keyCode : e.which
-    
-    if (keyCode == '38') {
-      // up arrow
-    }
-    else if (keyCode == '40') {
-      // down arrow
-    }
-    else if (keyCode == '37') {
-      // left arrow
-      
-      // Move player character to the left but only if there are no obstacles.
-      var character = characters['P']
-      if (character.isFacingRight) {
-        character.isFacingRight = false
-        character['image'].style.transform = "rotatey(180deg)"
-      }
-      else {
-        var x = character['position'].left - 1
-        var y = character['position'].top
-        if (!character['isWalking'] && !map[x][y]) {
-          character['isWalking'] = true
-        }
-      }
-    }
-    else if (keyCode == '39') {
-      // right arrow
-
-      // Move player character to the right but only if there are no obstacles.
-      var character = characters['P']
-      if (!character.isFacingRight) {
-        character.isFacingRight = true
-        character['image'].style.transform = ""
-      }
-      else {
-        var x = character['position'].left + 1
-        var y = character['position'].top
-        if (!character['isWalking'] && !map[x][y]) {
-          character['isWalking'] = true
-        }
-      }
-    }
-    else if (keyCode == '32') {
-      // space bar
-
-      // Make the player character jump.
-      var character = characters['P']
-      var x = character['position'].left
-      var y = character['position'].top - 1
-      if (!character['isJumping'] && !map[x][y]) {
-        character['position']['jump'] = 0
-        character['position']['topjump'] = character['position'].top
-        character['isJumping'] = true
-      }
-    }
-      
-      return false
-  }
-  
-  var timer = setInterval(onTimer, 1000 / 30)
-
-  function onTimer() {
-    loop()
-  }
-  
-})
+b b b b b b b b b b b b
+b b b b b b b b b b b b
+r        P            r
+ggggggggggggggggggggggg
+g g g g g g g g g g g g
 </script>
 
 <div id="screen">
@@ -174,54 +34,7 @@ document.addEventListener("DOMContentLoaded", function() {
   <div id="characters"></div>
 </div>
 
-<script>
-
-function setup() {
-}
-
-function loop() {
-  // Move player character to the right.
-  var character = characters['P']
-  if (character['isWalking']) {
-    if (character['image'].src.indexOf(character.walking) !== -1) {
-      character['image'].src = character.standing
-    }
-    else {
-      character['image'].src = character.walking
-    }
-    
-    if (character.isFacingRight) {
-      character['position'].left += 0.25
-    }
-    else {
-      character['position'].left -= 0.25
-    }
-    
-    character['image'].style.left = character['position'].left * 16
-    character['image'].style.top = character['position'].top * 16
-    
-    if (character['position'].left == Math.floor(character['position'].left)) {
-      character['isWalking'] = false
-    }
-  }
-  if (character['isJumping']) {
-    character['image'].src = character.walking
-    character['position'].jump += Math.PI / 8
-    character['position'].top = character['position'].topjump - Math.sin(character['position'].jump)
-    
-    character['image'].style.left = character['position'].left * 16
-    character['image'].style.top = character['position'].top * 16
-    
-    if (character['position'].jump >= Math.PI) {
-      character['isJumping'] = false
-      character['position'].top = character['position'].topjump
-      character['image'].src = character.standing
-    }
-  }
-  
-}
-
-</script>
+<script src="game.js"></script>
 
 </body>
 </html>
